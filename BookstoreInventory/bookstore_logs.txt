@@ -54,3 +54,83 @@ Jun 04, 2025 1:29:32 PM BookstoreInventory <init>
 INFO: Bookstore Inventory system initialized.
 Jun 04, 2025 1:29:50 PM BookstoreInventory updateStock
 WARNING: Update failed: Book ID 3 not found.
+Jun 06, 2025 10:59:11 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 06, 2025 10:59:11 AM BookstoreInventory addBook
+INFO: Book added: Harry Potter | Stock: 50
+Jun 06, 2025 10:59:11 AM BookstoreInventory addBook
+INFO: Book added: The Hobbit | Stock: 10
+Jun 06, 2025 11:00:09 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 06, 2025 11:00:09 AM BookstoreInventory addBook
+INFO: Book added: Harry Potter | Stock: 50
+Jun 06, 2025 11:00:09 AM BookstoreInventory addBook
+INFO: Book added: The Hobbit | Stock: 10
+Jun 06, 2025 11:14:48 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 06, 2025 11:14:48 AM BookstoreInventory addBook
+INFO: Book added: Harry Potter | Stock: 50
+Jun 06, 2025 11:14:48 AM BookstoreInventory addBook
+INFO: Book added: The Hobbit | Stock: 10
+Jun 06, 2025 11:14:56 AM BookstoreInventory processSale
+INFO: Sale processed for: The Hobbit | Quantity: 1
+Jun 06, 2025 11:29:28 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 06, 2025 11:29:28 AM BookstoreInventory addBook
+INFO: Book added: Harry Potter | Stock: 50
+Jun 06, 2025 11:29:28 AM BookstoreInventory addBook
+INFO: Book added: The Hobbit | Stock: 10
+Jun 06, 2025 11:29:36 AM BookstoreInventory processSale
+INFO: Sale processed for: The Hobbit | Quantity: 1
+Jun 11, 2025 9:34:53 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 11, 2025 9:34:53 AM BookstoreInventory addBook
+INFO: Book added: Harry Potter and the Sorcerer's Stone | Stock: 50
+Jun 11, 2025 9:34:53 AM BookstoreInventory addBook
+INFO: Book added: The Hobbit | Stock: 10
+Jun 11, 2025 9:34:53 AM BookstoreInventory processSale
+INFO: Sale processed for: Harry Potter and the Sorcerer's Stone | Quantity: 5
+Jun 11, 2025 9:34:53 AM BookstoreInventory processSale
+INFO: Sale processed for: The Hobbit | Quantity: 2
+Jun 11, 2025 9:34:53 AM BookstoreInventory displayInvoices
+INFO: Displayed all sales invoices.
+Jun 11, 2025 9:35:25 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 11, 2025 9:35:25 AM BookstoreInventory addBook
+INFO: Book added: Harry Potter | Stock: 50
+Jun 11, 2025 9:35:25 AM BookstoreInventory addBook
+INFO: Book added: The Hobbit | Stock: 10
+Jun 11, 2025 9:36:39 AM BookstoreInventory processSale
+INFO: Sale processed for: The Hobbit | Quantity: 1
+Jun 11, 2025 11:03:14 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 11, 2025 11:04:28 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 11, 2025 11:09:28 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 11, 2025 11:10:07 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 13, 2025 10:22:47 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 13, 2025 10:23:20 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 13, 2025 10:25:00 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:35:30 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:37:19 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:37:38 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:42:45 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:43:09 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:48:16 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 9:57:59 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 10:09:18 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 10:12:45 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.

@@ -1,166 +1,219 @@
-import java.util.ArrayList;   // Import ArrayList to store books and transactions
-import java.util.List;        // Import List interface for flexibility
-import java.util.logging.*;   // Import Java's built-in logging framework
-import java.io.IOException;   // Import IOException for handling file logging errors
-import java.util.Date;        // Import Date class for timestamps in invoices and reorder requests
+import java.util.ArrayList;      // Import ArrayList to store books (local cache if you want one later)
+import java.util.List;           // Import List interface for managing collections
+import java.util.logging.*;      // Import logging framework for tracking inventory changes
+import java.io.IOException;      // Import IOException for file handling
 
-// Class to manage the bookstore's inventory system
+import java.sql.Connection;      // Import SQL Connection for database connectivity
+import java.sql.PreparedStatement;   // Import PreparedStatement for executing SQL queries
+import java.sql.ResultSet;       // Import ResultSet for retrieving query results
+import java.sql.SQLException;    // Import SQLException for handling database errors
+import java.sql.Timestamp;       // Import Timestamp for the invoice date
+import java.util.Date;           // Import Date so the Timestamp import is truly used
+
+// Class to manage bookstore inventory operations
 public class BookstoreInventory {
-    private List<Books> books = new ArrayList<>();  // List to store all books in inventory
-    private List<Invoice> invoices = new ArrayList<>();  // List to store invoices for sales
-    private List<ReorderRequest> reorderRequests = new ArrayList<>();  // List to store supplier restock requests
-    private static final Logger logger = Logger.getLogger(BookstoreInventory.class.getName()); // Logger instance
+    private static final Logger logger =
+            Logger.getLogger(BookstoreInventory.class.getName());  // Logger instance
 
-    // Configure logging (writes logs to console & file)
+    /* Logging configuration */
     static {
         try {
-            // Create a file handler to store logs in 'bookstore_logs.txt'
             FileHandler fileHandler = new FileHandler("bookstore_logs.txt", true);
             fileHandler.setFormatter(new SimpleFormatter());
             logger.addHandler(fileHandler);
 
-            // Console handler to display logs in terminal
             ConsoleHandler consoleHandler = new ConsoleHandler();
             consoleHandler.setFormatter(new SimpleFormatter());
             logger.addHandler(consoleHandler);
 
-            // Set default logging level to INFO
             logger.setLevel(Level.INFO);
         } catch (IOException e) {
             System.out.println("Error initializing logging system: " + e.getMessage());
         }
     }
 
-    // Constructor - Logs when the inventory system starts
     public BookstoreInventory() {
         logger.log(Level.INFO, "Bookstore Inventory system initialized.");
     }
 
-    // Method to add a new book to the inventory
+    // Method to add a new book to the inventory (stored in MySQL)
     public void addBook(Books book) {
-        books.add(book);  // Adds a book to the inventory list
-        logger.log(Level.INFO, "Book added: " + book.getTitle() + " | Stock: " + book.getStockQuantity());
-    }
+        String sql =
+                "INSERT INTO books (title, author, genre, price, stockQuantity) " +
+                "VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-    // Method to display all books in inventory
-    public void displayInventory() {
-        if (books.isEmpty()) {  // Checks if inventory is empty
-            System.out.println("No books in inventory.");
-            logger.log(Level.WARNING, "Inventory check: No books available.");
-        } else {
-            for (Books book : books) {  // Loops through the list and prints each book
-                System.out.println(book);
-            }
-            logger.log(Level.INFO, "Displayed current inventory list.");
+            stmt.setString(1, book.getTitle());
+            stmt.setString(2, book.getAuthor());
+            stmt.setString(3, book.getGenre());
+            stmt.setDouble(4, book.getPrice());
+            stmt.setInt   (5, book.getStockQuantity());
+            stmt.executeUpdate();
+
+            System.out.println("Book added to database: " + book.getTitle());
+            logger.log(Level.INFO,
+                    "Book added: " + book.getTitle() + " | Stock: " + book.getStockQuantity());
+        } catch (SQLException e) {
+            System.out.println("Error adding book: " + e.getMessage());
         }
     }
 
-    // Method to update the stock quantity of a specific book
+    // Method to update the stock of a specific book in MySQL
     public void updateStock(int bookID, int newStock) {
-        for (Books book : books) {  // Loops through books to find matching book ID
-            if (book.getBookID() == bookID) {  // If book is found, update stock quantity
-                book.updateStock(newStock);
-                System.out.println("Updated stock for: " + book.getTitle());
-                logger.log(Level.INFO, "Stock updated for: " + book.getTitle() + " | New Stock: " + newStock);
-                return;
-            }
+        String sql = "UPDATE books SET stockQuantity = ? WHERE bookID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, newStock);
+            stmt.setInt(2, bookID);
+            stmt.executeUpdate();
+
+            System.out.println("Stock updated for Book ID: " + bookID + " | New Stock: " + newStock);
+            logger.log(Level.INFO,
+                    "Stock updated for Book ID: " + bookID + " | New Stock: " + newStock);
+        } catch (SQLException e) {
+            System.out.println("Error updating stock: " + e.getMessage());
         }
-        System.out.println("Book ID not found.");  // Message if book ID does not exist
-        logger.log(Level.WARNING, "Update failed: Book ID " + bookID + " not found.");
     }
 
-    // Method to delete a book from inventory based on book ID
+    // Method to delete a book from inventory in MySQL
     public void deleteBook(int bookID) {
-        books.removeIf(book -> book.getBookID() == bookID);  // Removes book from list
-        System.out.println("Book ID " + bookID + " removed from inventory.");
-        logger.log(Level.INFO, "Book ID " + bookID + " removed from inventory.");
-    }
+        String sql = "DELETE FROM books WHERE bookID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-    // Method to check if any books are running low on stock
-    public void checkLowStock(int threshold) {
-        for (Books book : books) {
-            if (book.getStockQuantity() <= threshold) {  // If stock is below threshold, show alert
-                System.out.println("Low stock alert: " + book.getTitle() + " (Stock: " + book.getStockQuantity() + ")");
-                logger.log(Level.WARNING, "Low stock alert: " + book.getTitle() + " | Stock: " + book.getStockQuantity());
-            }
+            stmt.setInt(1, bookID);
+            stmt.executeUpdate();
+
+            System.out.println("Book ID " + bookID + " removed from database.");
+            logger.log(Level.INFO, "Book ID " + bookID + " removed from inventory.");
+        } catch (SQLException e) {
+            System.out.println("Error deleting book: " + e.getMessage());
         }
     }
 
-    // Method to return the list of books (used for UI display)
+    // Method to process a book sale (updates stock AND writes an invoice row)
+    public void processSale(int bookID, int quantity) {
+
+        /* 1. Reduce stock    2. Create invoice    (do both in one DB transaction) */
+        final String updateStockSQL =
+                "UPDATE books SET stockQuantity = stockQuantity - ? WHERE bookID = ?";
+
+        final String insertInvoiceSQL =
+                "INSERT INTO invoices (saleDate, bookID, bookTitle, quantity, totalPrice) " +
+                "VALUES (?, ?, (SELECT title FROM books WHERE bookID = ?), ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            conn.setAutoCommit(false);  // Begin atomic block
+
+            try (PreparedStatement stockStmt   = conn.prepareStatement(updateStockSQL);
+                 PreparedStatement invoiceStmt = conn.prepareStatement(insertInvoiceSQL)) {
+
+                /* ---------- Update stock ---------- */
+                stockStmt.setInt(1, quantity);
+                stockStmt.setInt(2, bookID);
+                stockStmt.executeUpdate();
+
+                /* ---------- Insert invoice ---------- */
+                double priceEach = getBookPrice(bookID);
+                double total     = priceEach * quantity;
+
+                // Uses Date → keeps the Date import valid and removes unused-import warning
+                Timestamp now = new Timestamp(new Date().getTime());
+
+                invoiceStmt.setTimestamp(1, now);  // saleDate
+                invoiceStmt.setInt      (2, bookID);
+                invoiceStmt.setInt      (3, bookID);  // for sub-query placeholder
+                invoiceStmt.setInt      (4, quantity);
+                invoiceStmt.setDouble   (5, total);
+                invoiceStmt.executeUpdate();
+
+                conn.commit();  // All good
+                System.out.println("Sale processed successfully for Book ID: " + bookID);
+                logger.log(Level.INFO,
+                        "Sale processed | Book ID: " + bookID + " | Qty: " + quantity +
+                        " | Total: $" + total);
+
+            } catch (SQLException inner) {
+                conn.rollback();                 // Undo both steps if either fails
+                throw inner;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error processing sale: " + e.getMessage());
+        }
+    }
+
+    // Method to retrieve inventory from MySQL
+    public void displayInventory() {
+        String sql = "SELECT * FROM books";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            System.out.println("\n---- Current Inventory ----");
+            while (rs.next()) {
+                System.out.println(
+                        "Book ID: " + rs.getInt("bookID") +
+                        ", Title: " + rs.getString("title") +
+                        ", Author: " + rs.getString("author") +
+                        ", Genre: " + rs.getString("genre") +
+                        ", Price: $" + rs.getDouble("price") +
+                        ", Stock: " + rs.getInt("stockQuantity"));
+            }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving inventory: " + e.getMessage());
+        }
+    }
+
+    // Method to retrieve book price from MySQL
+    private double getBookPrice(int bookID) {
+        String sql = "SELECT price FROM books WHERE bookID = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, bookID);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getDouble("price");
+
+        } catch (SQLException e) {
+            System.out.println("Error retrieving book price: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    // Optional helper for UI: return list of Books objects
     public List<Books> getBooksList() {
-        return books;  // Returns the current inventory list
-    }
+        List<Books> list = new ArrayList<>();
+        String sql = "SELECT * FROM books";
 
-    // ----------------------------------------------
-    // NEW WEEK 4 FEATURE: Supplier Request System
-    // ----------------------------------------------
-    
-    // Method to allow users to manually request additional stock from suppliers
-    public void requestStockFromSupplier(int bookID, int quantity, String supplierName) {
-        for (Books book : books) {
-            if (book.getBookID() == bookID) {
-                ReorderRequest request = new ReorderRequest(bookID, book.getTitle(), quantity, supplierName);
-                reorderRequests.add(request);
-                System.out.println("Supplier request placed: " + request);
-                logger.log(Level.INFO, "Supplier request placed for: " + book.getTitle() + " | Quantity: " + quantity + " | Supplier: " + supplierName);
-                return;
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(new Books(
+                        rs.getInt("bookID"),
+                        rs.getString("title"),
+                        rs.getString("author"),
+                        rs.getString("genre"),
+                        rs.getDouble("price"),
+                        rs.getInt("stockQuantity")));
             }
+        } catch (SQLException e) {
+            System.out.println("Error retrieving book list: " + e.getMessage());
         }
-        System.out.println("Supplier request failed: Book ID not found.");
-        logger.log(Level.WARNING, "Supplier request failed: Book ID " + bookID + " not found.");
+        return list;
     }
 
-    // ----------------------------------------------
-    // NEW WEEK 4 FEATURE: Low Stock Automation - Suggest Reorders
-    // ----------------------------------------------
-    
-    // Method to automatically detect low stock and suggest a reorder request
-    public void checkLowStockAndSuggestReorder(int threshold) {
-        for (Books book : books) {
-            if (book.getStockQuantity() <= threshold) {
-                System.out.println("Low stock detected for: " + book.getTitle());
-                System.out.println("Suggested reorder request: Quantity " + (threshold * 2)); // Suggests double reorder
-                
-                // Automatically place reorder request
-                ReorderRequest newRequest = new ReorderRequest(book.getBookID(), book.getTitle(), threshold * 2, "Default Supplier");
-                reorderRequests.add(newRequest);
-                System.out.println("Reorder request placed: " + newRequest);
-                logger.log(Level.INFO, "Auto-reorder request placed for: " + book.getTitle() + " | Suggested Quantity: " + (threshold * 2));
-            }
-        }
-    }
-
-    // Method to display all reorder requests
-    public void displayReorderRequests() {
-        System.out.println("\n---- Reorder Requests ----");
-        if (reorderRequests.isEmpty()) {
-            System.out.println("No supplier requests yet.");
-        } else {
-            for (ReorderRequest request : reorderRequests) {
-                System.out.println(request);
-            }
-        }
-        logger.log(Level.INFO, "Displayed all reorder requests.");
-    }
-
-    // Main method to simulate bookstore operations
     public static void main(String[] args) {
-        BookstoreInventory inventory = new BookstoreInventory(); // Create inventory system
-        
-        // Adding sample books manually
-        inventory.addBook(new Books(1, "Harry Potter and the Sorcerer's Stone", "J.K. Rowling", "Fantasy", 19.99, 50));
-        inventory.addBook(new Books(2, "The Hobbit", "J.R.R. Tolkien", "Fantasy", 14.99, 10));
+        Connection conn = DatabaseConnection.getConnection();
+        System.out.println(conn != null
+                ? "Connected to MySQL database successfully!"
+                : "Failed to connect to MySQL!!!");
 
-        // Display inventory
-        inventory.displayInventory();
-
-        // Process supplier request manually
-        inventory.requestStockFromSupplier(2, 20, "Book Supplier Inc.");
-
-        // Auto-reorder suggestion for low stock threshold (below 15)
-        inventory.checkLowStockAndSuggestReorder(15);
-
-        // Display reorder requests
-        inventory.displayReorderRequests();
+        BookstoreInventory inv = new BookstoreInventory();
+        inv.displayInventory();
     }
 }
