@@ -1,199 +1,239 @@
 import javax.swing.*;           // Swing components for UI
 import java.awt.*;              // AWT for layouts
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.Serializable;    // To silence the serial-warning
-import java.util.List;
+import java.awt.event.*;        // Listeners (ActionEvent, etc.)
+import java.io.Serializable;    // To fix serialization warning
+import java.util.List;          // For working with collections
 
-/**
- * Graphical UI for the bookstore inventory system.
- */
+// Class to create UI for the bookstore inventory system
 public class BookstoreUI extends JFrame implements Serializable {
-    private static final long serialVersionUID = 1L;      // serialization id
+    private static final long serialVersionUID = 1L;  // Fix for serialization warning
 
-    /* core references */
-    private final BookstoreInventory inventory;           // inventory layer
-    private final JTextArea inventoryDisplay;             // inventory text area
+    private final BookstoreInventory inventory;  // Reference to inventory system
+    private final JTextArea inventoryDisplay;    // UI component to show inventory list
 
-    /*TAB #1  – Sales controls */
-    private final JTextField saleBookIdField   = new JTextField();
-    private final JTextField saleQtyField      = new JTextField();
+    // Panels used for different functionalities (Sales, and Inventory Management)
+    private final JTabbedPane tabbedPane = new JTabbedPane();
 
-    /* TAB #2 – Add-book controls */
-    private final JTextField addTitleField     = new JTextField();
-    private final JTextField addAuthorField    = new JTextField();
-    private final JTextField addGenreField     = new JTextField();
-    private final JTextField addPriceField     = new JTextField();
-    private final JTextField addStockField     = new JTextField();
+    // Sales panel components
+    private final JTextField saleBookIDField = new JTextField();
+    private final JTextField saleQuantityField = new JTextField();
 
-    /* TAB #3 – Update-stock controls */
-    private final JTextField updBookIdField    = new JTextField();
-    private final JTextField updNewStockField  = new JTextField();
+    // Add Book panel components
+    private final JTextField addTitleField = new JTextField();
+    private final JTextField addAuthorField = new JTextField();
+    private final JTextField addGenreField = new JTextField();
+    private final JTextField addPriceField = new JTextField();
+    private final JTextField addStockField = new JTextField();
 
-    /* TAB #4 – Delete-book controls */
-    private final JTextField delBookIdField    = new JTextField();
+    // Update Stock panel components
+    private final JTextField updateBookIDField = new JTextField();
+    private final JTextField updateStockField = new JTextField();
 
-    public BookstoreUI(BookstoreInventory inventory) {
+    // Delete Book panel components
+    private final JTextField deleteBookIDField = new JTextField();
+
+    // Constructor – Initializes the extended bookstore UI
+    public BookstoreUI (BookstoreInventory inventory) {
         this.inventory = inventory;
 
-        /*  Frame basics  */
-        setTitle("Bookstore Inventory Management");
-        setSize(700, 500);
+        setTitle("Extended Bookstore Inventory Management");
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        /*  CENTER  inventory text area in a scroll pane  */
+        // Build and add the Tabbed Pane with two main tabs:
+        //  1. Sales/Invoice Entry, 2. Inventory Management
+        tabbedPane.addTab("Sales / Invoices", createSalesPanel());
+        tabbedPane.addTab("Manage Inventory", createInventoryPanel());
+        add(tabbedPane, BorderLayout.CENTER);
+
+        // Display area at the bottom to view updated inventory
         inventoryDisplay = new JTextArea();
         inventoryDisplay.setEditable(false);
-        add(new JScrollPane(inventoryDisplay), BorderLayout.CENTER);
+        add(new JScrollPane(inventoryDisplay), BorderLayout.SOUTH);
 
-        /*  NORTH  the tabbed forms  */
-        add(buildTabs(), BorderLayout.NORTH);
+        updateInventoryDisplay();  // Initial inventory display
+    }
 
-        /*  SOUTH  global refresh button  */
+    // Build the Sales / Invoice Entry panel
+    private JPanel createSalesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+
+        // Form for sales input
+        JPanel form = new JPanel(new GridLayout(2, 2, 5, 5));
+        form.add(new JLabel("Book ID:"));
+        form.add(saleBookIDField);
+        form.add(new JLabel("Quantity:"));
+        form.add(saleQuantityField);
+
+        // Button panel for sale processing and refreshing
+        JPanel btnPanel = new JPanel();
+        JButton saleBtn = new JButton("Make Sale");
+        saleBtn.addActionListener(e -> processSale());
         JButton refreshBtn = new JButton("Refresh Inventory");
         refreshBtn.addActionListener(e -> updateInventoryDisplay());
-        add(refreshBtn, BorderLayout.SOUTH);
+        btnPanel.add(saleBtn);
+        btnPanel.add(refreshBtn);
 
-        /*  Initial fill  */
-        updateInventoryDisplay();
+        panel.add(form, BorderLayout.NORTH);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        return panel;
     }
 
-    private JTabbedPane buildTabs() {
-        JTabbedPane tabs = new JTabbedPane();
+    // Build the Inventory Management panel for adding, updating, and deleting books
+    private JPanel createInventoryPanel() {
+        // We'll split the panel vertically into three sections.
+        JPanel panel = new JPanel(new GridLayout(1, 3, 10, 10));
 
-        /* Sales Tab */
-        JPanel salesPanel = new JPanel(new GridLayout(3, 2, 5, 5));
-        salesPanel.add(new JLabel("Book ID:"));
-        salesPanel.add(saleBookIdField);
-        salesPanel.add(new JLabel("Quantity:"));
-        salesPanel.add(saleQtyField);
-
-        JButton saleBtn = new JButton("Make Sale");
-        saleBtn.addActionListener(e -> makeSale());
-        salesPanel.add(new JLabel());  // filler
-        salesPanel.add(saleBtn);
-        tabs.addTab("Sales", salesPanel);
-
-        /* Add-Book Tab */
+        // ----- Add Book Section -----
         JPanel addPanel = new JPanel(new GridLayout(6, 2, 5, 5));
-        addPanel.add(new JLabel("Title:"));   addPanel.add(addTitleField);
-        addPanel.add(new JLabel("Author:"));  addPanel.add(addAuthorField);
-        addPanel.add(new JLabel("Genre:"));   addPanel.add(addGenreField);
-        addPanel.add(new JLabel("Price:"));   addPanel.add(addPriceField);
-        addPanel.add(new JLabel("Stock:"));   addPanel.add(addStockField);
-
+        addPanel.setBorder(BorderFactory.createTitledBorder("Add Book"));
+        addPanel.add(new JLabel("Title:"));
+        addPanel.add(addTitleField);
+        addPanel.add(new JLabel("Author:"));
+        addPanel.add(addAuthorField);
+        addPanel.add(new JLabel("Genre:"));
+        addPanel.add(addGenreField);
+        addPanel.add(new JLabel("Price:"));
+        addPanel.add(addPriceField);
+        addPanel.add(new JLabel("Stock:"));
+        addPanel.add(addStockField);
         JButton addBtn = new JButton("Add Book");
         addBtn.addActionListener(e -> addBook());
-        addPanel.add(new JLabel());   // filler
+        addPanel.add(new JLabel());  // filler
         addPanel.add(addBtn);
-        tabs.addTab("Add Book", addPanel);
 
-        /* Update-Stock Tab */
-        JPanel updPanel = new JPanel(new GridLayout(3, 2, 5, 5));
-        updPanel.add(new JLabel("Book ID:"));   updPanel.add(updBookIdField);
-        updPanel.add(new JLabel("New Stock:")); updPanel.add(updNewStockField);
+        // ----- Update Stock Section -----
+        JPanel updatePanel = new JPanel(new GridLayout(3, 2, 5, 5));
+        updatePanel.setBorder(BorderFactory.createTitledBorder("Update Stock"));
+        updatePanel.add(new JLabel("Book ID:"));
+        updatePanel.add(updateBookIDField);
+        updatePanel.add(new JLabel("New Stock:"));
+        updatePanel.add(updateStockField);
+        JButton updateBtn = new JButton("Update Stock");
+        updateBtn.addActionListener(e -> updateStock());
+        updatePanel.add(new JLabel());  // filler
+        updatePanel.add(updateBtn);
 
-        JButton updBtn = new JButton("Update Stock");
-        updBtn.addActionListener(e -> updateStock());
-        updPanel.add(new JLabel());   // filler
-        updPanel.add(updBtn);
-        tabs.addTab("Update Stock", updPanel);
+        // ----- Delete Book Section -----
+        JPanel deletePanel = new JPanel(new GridLayout(2, 2, 5, 5));
+        deletePanel.setBorder(BorderFactory.createTitledBorder("Delete Book"));
+        deletePanel.add(new JLabel("Book ID:"));
+        deletePanel.add(deleteBookIDField);
+        JButton deleteBtn = new JButton("Delete Book");
+        deleteBtn.addActionListener(e -> deleteBook());
+        deletePanel.add(new JLabel());  // filler
+        deletePanel.add(deleteBtn);
 
-        /* Delete-Book Tab */
-        JPanel delPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        delPanel.add(new JLabel("Book ID:"));
-        delPanel.add(delBookIdField);
-
-        JButton delBtn = new JButton("Delete Book");
-        delBtn.addActionListener(e -> deleteBook());
-        delPanel.add(new JLabel());   // filler
-        delPanel.add(delBtn);
-        tabs.addTab("Delete Book", delPanel);
-
-        return tabs;
+        panel.add(addPanel);
+        panel.add(updatePanel);
+        panel.add(deletePanel);
+        return panel;
     }
 
-    private void makeSale() {
+    // Process a sale from the Sales tab
+    private void processSale() {
         try {
-            int id  = Integer.parseInt(saleBookIdField.getText().trim());
-            int qty = Integer.parseInt(saleQtyField.getText().trim());
-            inventory.processSale(id, qty);
-            JOptionPane.showMessageDialog(this, "Sale recorded.");
-            clearFields(saleBookIdField, saleQtyField);
+            int bookID = Integer.parseInt(saleBookIDField.getText().trim());
+            int quantity = Integer.parseInt(saleQuantityField.getText().trim());
+            if (quantity <= 0) {
+                throw new NumberFormatException("Quantity must be positive.");
+            }
+            inventory.processSale(bookID, quantity);
+            JOptionPane.showMessageDialog(this, "Sale processed successfully!",
+                                          "Success", JOptionPane.INFORMATION_MESSAGE);
+            saleBookIDField.setText("");
+            saleQuantityField.setText("");
             updateInventoryDisplay();
         } catch (NumberFormatException ex) {
-            showError("Enter numeric Book-ID and Quantity.");
+            JOptionPane.showMessageDialog(this, "Invalid input. Please enter numeric values (and a positive quantity).",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // Add a new book using input from the Add Book section
     private void addBook() {
         try {
-            String title  = addTitleField.getText().trim();
+            String title = addTitleField.getText().trim();
             String author = addAuthorField.getText().trim();
-            String genre  = addGenreField.getText().trim();
-            double price  = Double.parseDouble(addPriceField.getText().trim());
-            int stock     = Integer.parseInt(addStockField.getText().trim());
-
-            if (title.isEmpty()) { showError("Title cannot be blank."); return; }
-
-            // BookID auto-generated by DB ‑ use 0 for placeholder
-            Books b = new Books(0, title, author, genre, price, stock);
-            inventory.addBook(b);
-            JOptionPane.showMessageDialog(this, "Book added.");
-            clearFields(addTitleField, addAuthorField, addGenreField, addPriceField, addStockField);
+            String genre = addGenreField.getText().trim();
+            double price = Double.parseDouble(addPriceField.getText().trim());
+            int stock = Integer.parseInt(addStockField.getText().trim());
+            if (title.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Title cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            // BookID is auto-generated by the database.
+            Books newBook = new Books(0, title, author, genre, price, stock);
+            inventory.addBook(newBook);
+            JOptionPane.showMessageDialog(this, "Book added successfully!",
+                                          "Success", JOptionPane.INFORMATION_MESSAGE);
+            addTitleField.setText("");
+            addAuthorField.setText("");
+            addGenreField.setText("");
+            addPriceField.setText("");
+            addStockField.setText("");
             updateInventoryDisplay();
         } catch (NumberFormatException ex) {
-            showError("Price and Stock must be numeric.");
+            JOptionPane.showMessageDialog(this, "Price and Stock must be numeric.",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // Update an existing book's stock using input from the Update Stock section
     private void updateStock() {
         try {
-            int id   = Integer.parseInt(updBookIdField.getText().trim());
-            int qty  = Integer.parseInt(updNewStockField.getText().trim());
-            inventory.updateStock(id, qty);
-            JOptionPane.showMessageDialog(this, "Stock updated.");
-            clearFields(updBookIdField, updNewStockField);
+            int bookID = Integer.parseInt(updateBookIDField.getText().trim());
+            int newStock = Integer.parseInt(updateStockField.getText().trim());
+            inventory.updateStock(bookID, newStock);
+            JOptionPane.showMessageDialog(this, "Stock updated successfully!",
+                                          "Success", JOptionPane.INFORMATION_MESSAGE);
+            updateBookIDField.setText("");
+            updateStockField.setText("");
             updateInventoryDisplay();
         } catch (NumberFormatException ex) {
-            showError("Enter numeric Book-ID and New Stock.");
+            JOptionPane.showMessageDialog(this, "Book ID and New Stock must be numeric.",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // Delete a book using input from the Delete Book section
     private void deleteBook() {
         try {
-            int id = Integer.parseInt(delBookIdField.getText().trim());
-            inventory.deleteBook(id);
-            JOptionPane.showMessageDialog(this, "Book deleted.");
-            clearFields(delBookIdField);
+            int bookID = Integer.parseInt(deleteBookIDField.getText().trim());
+            inventory.deleteBook(bookID);
+            JOptionPane.showMessageDialog(this, "Book deleted successfully!",
+                                          "Success", JOptionPane.INFORMATION_MESSAGE);
+            deleteBookIDField.setText("");
             updateInventoryDisplay();
         } catch (NumberFormatException ex) {
-            showError("Enter numeric Book-ID.");
+            JOptionPane.showMessageDialog(this, "Book ID must be numeric.",
+                                          "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // Update the inventory display text area with current inventory data 
     private void updateInventoryDisplay() {
-        List<Books> list = inventory.getBooksList();
+        List<Books> booksList = inventory.getBooksList();
         StringBuilder sb = new StringBuilder("Current Inventory:\n");
-        for (Books b : list) sb.append(b).append('\n');
+        for (Books b : booksList) {
+            sb.append(b).append("\n");
+        }
         inventoryDisplay.setText(sb.toString());
     }
 
-    private void clearFields(JTextField... fields) {
-        for (JTextField f : fields) f.setText("");
-    }
-    private void showError(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Input Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-
+    // Main method to launch the extended UI
     public static void main(String[] args) {
-        BookstoreInventory inv = new BookstoreInventory();
-        // sample seed data
-        inv.addBook(new Books(1, "Harry Potter", "J.K. Rowling", "Fantasy", 19.99, 40));
-        inv.addBook(new Books(2, "The Hobbit", "J.R.R. Tolkien", "Fantasy", 14.99, 25));
+        // Create your inventory system and seed it with sample books
+        BookstoreInventory inventory = new BookstoreInventory();
+        inventory.addBook(new Books(1, "Harry Potter", "J.K. Rowling", "Fantasy", 19.99, 50));
+        inventory.addBook(new Books(2, "The Hobbit", "J.R.R. Tolkien", "Fantasy", 14.99, 10));
 
-        SwingUtilities.invokeLater(() -> new BookstoreUI(inv).setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+        	BookstoreUI ui = new BookstoreUI(inventory);
+            ui.setVisible(true);
+        });
     }
 }

@@ -134,3 +134,25 @@ Jun 15, 2025 10:09:18 AM BookstoreInventory <init>
 INFO: Bookstore Inventory system initialized.
 Jun 15, 2025 10:12:45 AM BookstoreInventory <init>
 INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 10:20:59 AM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 15, 2025 10:21:10 AM BookstoreInventory processSale
+INFO: Sale processed | Book ID: 3 | Qty: 1 | Total: $20.99
+Jun 17, 2025 6:23:05 PM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 17, 2025 6:33:36 PM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 17, 2025 6:59:01 PM BookstoreInventory <init>
+INFO: Bookstore Inventory system initialized.
+Jun 17, 2025 7:00:30 PM BookstoreInventory processSale
+INFO: Sale processed | Book ID: 4 | Qty: 1 | Total: $22.99
+Jun 17, 2025 7:01:35 PM BookstoreInventory updateStock
+INFO: Stock updated for Book ID: 9 | New Stock: 5
+Jun 17, 2025 7:08:00 PM BookstoreInventory processSale
+INFO: Sale processed | Book ID: 3 | Qty: 5 | Total: $104.94999999999999
+Jun 17, 2025 7:08:05 PM BookstoreInventory processSale
+INFO: Sale processed | Book ID: 2 | Qty: 2 | Total: $37.98
+Jun 17, 2025 7:08:10 PM BookstoreInventory processSale
+INFO: Sale processed | Book ID: 1 | Qty: 3 | Total: $59.97
+Jun 17, 2025 7:08:16 PM BookstoreInventory processSale
+INFO: Sale processed | Book ID: 10 | Qty: 2 | Total: $35.98
